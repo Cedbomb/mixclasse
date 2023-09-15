@@ -68,7 +68,7 @@
             <option value="groupe15.json">groupe15.json</option>
             <option value="groupe17.json">groupe17.json</option>
         </select>
-        <input type="number" id="students-per-group" placeholder="Nombre d'élève par groupe">
+        <input type="number" id="students-per-group" placeholder="Enter students per group">
         <button onclick="startPopulating()">Démarrage</button>
         <button onclick="stopPopulating()">Arrêt</button>
     </div>
@@ -108,12 +108,11 @@
 
     <script>
         var intervalID;
-        var studentsPerGroup = 3; // Default value
 
         function calculateGroups(students) {
             var container = document.getElementById('group-container');
             var existingGroups = container.getElementsByClassName('group').length;
-            var requiredGroups = Math.ceil(students.length / studentsPerGroup); // Use user-specified value
+            var requiredGroups = Math.ceil(students.length / 3); // Calculate required groups based on 2 or 3 students per group
 
             // Remove extra groups
             while (existingGroups > requiredGroups) {
