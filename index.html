@@ -1,288 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        .greyed-out {
-            color: grey;
-        }
+    <title>Google Sign-In</title>
+    <!-- Include Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-        .group-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-gap: 20px;
-        }
+    <script>
+        // Initialize Firebase with your project config
+        // Import the functions you need from the SDKs you need
 
-        .group {
-            border: 2px solid black;
-            padding: 10px;
-            font-size: 28px;
-            line-height: 0.8;
-            text-align: center;
-            height: 220px;
-            /* Fixed height */
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 
-        .group h2 {
-            /* Text color set to white */
-            color: white;
-        }
+        // TODO: Add SDKs for Firebase products that you want to use
 
-        /* New styles for buttons */
-        .button-container {
-            text-align: center;
-            margin: 20px;
-        }
+        // https://firebase.google.com/docs/web/setup#available-libraries
 
-        button,
-        select {
-            font-size: 24px;
-            /* Bigger font size */
-            padding: 15px 30px;
-            /* Increased padding */
-            margin: 5px;
-            cursor: pointer;
-            /* Pointer cursor on hover */
-        }
 
-        select {
-            /* Additional styling for the drop-down menu */
-            appearance: none;
-            border: 1px solid #ccc;
-            background: #fff;
+        // Your web app's Firebase configuration
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg5WtlokGkNq0SZbOVIGAfWVZosapFaS0",
+            authDomain: "mixgroupe-af911.firebaseapp.com",
+            projectId: "mixgroupe-af911",
+            storageBucket: "mixgroupe-af911.appspot.com",
+            messagingSenderId: "310752550602",
+            appId: "1:310752550602:web:bdcc0409202f4dc1cade33"
+        };
+
+
+        // Initialize Firebase
+
+        const app = initializeApp(firebaseConfig);
+
+
+        // Handle Google Sign-In
+        function signInWithGoogle() {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    // User signed in
+                    var user = result.user;
+                    console.log("User signed in:", user);
+
+                    // Redirect to mixgroup.html
+                    window.location.href = "mixgroup.html";
+                })
+                .catch((error) => {
+                    // Handle errors
+                    console.error("Sign-in error:", error);
+                });
         }
-    </style>
-    <title>Student Groups</title>
+    </script>
 </head>
 
 <body>
-    <div class="button-container">
-        <select id="json-file-selector">
-            <option value="" selected>Choisi un groupe</option>
-            <option value="groupe12.json">groupe12.json</option>
-            <option value="groupe13.json">groupe13.json</option>
-            <option value="groupe14.json">groupe14.json</option>
-            <option value="groupe15.json">groupe15.json</option>
-            <option value="groupe17.json">groupe17.json</option>
-        </select>
-        <button onclick="startPopulating()">Démarrage</button>
-        <button onclick="stopPopulating()">Arrêt</button>
-    </div>
-
-
-    <div class="group-container" id="group-container">
-        <!-- Pre-create groups without student names -->
-        <div class="group" id="group1">
-            <h2>Équipe 1</h2>
-        </div>
-        <div class="group" id="group2">
-            <h2>Équipe 2</h2>
-        </div>
-        <div class="group" id="group3">
-            <h2>Équipe 3</h2>
-        </div>
-        <div class="group" id="group4">
-            <h2>Équipe 4</h2>
-        </div>
-        <div class="group" id="group5">
-            <h2>Équipe 5</h2>
-        </div>
-        <div class="group" id="group6">
-            <h2>Équipe 6</h2>
-        </div>
-        <div class="group" id="group7">
-            <h2>Équipe 7</h2>
-        </div>
-        <div class="group" id="group8">
-            <h2>Équipe 8</h2>
-        </div>
-        <div class="group" id="group9">
-            <h2>Équipe 9</h2>
-        </div>
-        <!-- ... Add all 9 groups similarly ... -->
-    </div>
-
-    <script>
-        var intervalID;
-
-        function calculateGroups(students) {
-            var container = document.getElementById('group-container');
-            var existingGroups = container.getElementsByClassName('group').length;
-            var requiredGroups = Math.ceil(students.length / 3); // Calculate required groups based on 2 or 3 students per group
-
-            // Remove extra groups
-            while (existingGroups > requiredGroups) {
-                container.removeChild(container.lastChild);
-                existingGroups--;
-            }
-
-            // Add required groups
-            while (existingGroups < requiredGroups) {
-                var groupDiv = document.createElement('div');
-                groupDiv.className = 'group';
-                groupDiv.id = 'group' + (existingGroups + 1);
-                groupDiv.innerHTML = '<h2>Équipe ' + (existingGroups + 1) + '</h2>';
-                container.appendChild(groupDiv);
-                existingGroups++;
-            }
-        }
-
-        function populateGroup(data, shuffleStudents = false) {
-            if (shuffleStudents) {
-                shuffle(data.students);
-            }
-
-            var students = [...data.students];
-            var container = document.getElementById('group-container');
-            var groups = container.getElementsByClassName('group');
-            var previousGroupStudents = [];
-
-            for (var i = 0; i < groups.length; i++) {
-                var groupDiv = groups[i];
-                var currentGroupStudents = [];
-
-                // Clear existing student names without affecting the h2 element
-                var studentNames = groupDiv.querySelectorAll('p');
-                studentNames.forEach(name => {
-                    name.remove();
-                });
-
-                for (var j = 0; j < 3 && students.length > 0; j++) {
-                    var studentP = document.createElement('p');
-                    var student = students.shift();
-                    if (student) {
-                        studentP.textContent = student;
-                        studentP.onclick = function () { this.classList.toggle('greyed-out'); };
-                        groupDiv.appendChild(studentP);
-                        currentGroupStudents.push(studentP); // Keep track of students in the current group
-                    }
-                }
-
-                // If current group has only one student and previous group has more than two, redistribute
-                if (currentGroupStudents.length === 1 && previousGroupStudents.length > 2) {
-                    var studentToMove = previousGroupStudents.pop(); // Remove student from previous group
-                    studentToMove.parentNode.removeChild(studentToMove);
-                    groupDiv.appendChild(studentToMove); // Add student to current group
-                }
-
-                previousGroupStudents = currentGroupStudents;
-            }
-        }
-        // Function to populate group sorted
-
-        function populateGroupsSorted() {
-            fetch('groupe11.json')
-                .then(response => response.json())
-                .then(data => {
-                    data.students.sort((a, b) => {
-                        var lastNameA = a.split(' ').pop();
-                        var lastNameB = b.split(' ').pop();
-                        return lastNameA.localeCompare(lastNameB);
-                    });
-                    populateGroup(data);
-                })
-                .catch(error => {
-                    console.error('An error occurred while fetching the JSON file:', error);
-                });
-        }
-
-
-        function populateGroups(data) {
-            if (data) {
-                populateGroup(data, true);
-            } else {
-                fetch('groupe11.json')
-                    .then(response => response.json())
-                    .then(data => {
-                        populateGroup(data, true);
-                    })
-                    .catch(error => {
-                        console.error('An error occurred while fetching the JSON file:', error);
-                    });
-            }
-        }
-
-        // Function to start populating groups
-        function startPopulating() {
-            var selectedFile = document.getElementById('json-file-selector').value;
-            if (selectedFile) { // Check if a file is selected
-                fetch(selectedFile)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Rest of the code...
-                    })
-                    .catch(error => {
-                        console.error('An error occurred while fetching the JSON file:', error);
-                    });
-            } else {
-                alert('Please select a JSON file before starting.');
-            }
-            fetch(selectedFile)
-                .then(response => response.json())
-                .then(data => {
-                    // Filter greyed-out names
-                    var greyedOutNamesSet = new Set();
-                    var greyedOutNames = document.querySelectorAll('.greyed-out');
-                    greyedOutNames.forEach(name => {
-                        greyedOutNamesSet.add(name.textContent);
-                    });
-
-                    var filteredStudents = data.students.filter(student => !greyedOutNamesSet.has(student));
-
-                    // Calculate and create the required groups
-                    calculateGroups(filteredStudents);
-
-                    // Set the h2 text color to black
-                    var headers = document.querySelectorAll('.group h2');
-                    headers.forEach(header => {
-                        header.style.color = 'black';
-                    });
-
-                    // Run populateGroups 10 times a second with the filtered data
-                    intervalID = setInterval(() => populateGroups({ students: filteredStudents }), 200);
-                })
-                .catch(error => {
-                    console.error('An error occurred while fetching the JSON file:', error);
-                });
-        }
-
-        // Function to stop populating groups
-        function stopPopulating() {
-            clearInterval(intervalID);
-        }
-
-        // Function to shuffle an array
-        function shuffle(array) {
-            for (var i = array.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-            }
-        }
-
-        // Function to click on names
-        function attachClickListeners() {
-            var studentNames = document.querySelectorAll('.group p');
-            studentNames.forEach(name => {
-                name.onclick = function () { this.classList.toggle('greyed-out'); };
-            });
-        }
-
-        document.getElementById('json-file-selector').addEventListener('change', function () {
-            var selectedFile = this.value;
-
-            fetch(selectedFile)
-                .then(response => response.json())
-                .then(data => {
-                    calculateGroups(data.students);
-                    populateGroup(data);
-                })
-                .catch(error => {
-                    console.error('An error occurred while fetching the JSON file:', error);
-                });
-        });
-    </script>
+    <h1>Google Sign-In</h1>
+    <p>Click the button below to sign in with Google:</p>
+    <button onclick="signInWithGoogle()">Sign in with Google</button>
 </body>
 
 </html>
