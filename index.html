@@ -210,50 +210,45 @@
         // Function to start populating groups
         function startPopulating() {
             var selectedFile = document.getElementById('json-file-selector').value;
-            studentsPerGroup = parseInt(document.getElementById('students-per-group').value) || 3;
-
-            if (selectedFile) {
+            if (selectedFile) { // Check if a file is selected
                 fetch(selectedFile)
                     .then(response => response.json())
                     .then(data => {
-                        calculateGroups(data.students);
-                        populateGroup(data);
+                        // Rest of the code...
                     })
                     .catch(error => {
-                        console.error('An error occurred:', error);
+                        console.error('An error occurred while fetching the JSON file:', error);
                     });
             } else {
-                alert('Please select a JSON file.');
+                alert('Please select a JSON file before starting.');
             }
-        }
+            fetch(selectedFile)
+                .then(response => response.json())
+                .then(data => {
+                    // Filter greyed-out names
+                    var greyedOutNamesSet = new Set();
+                    var greyedOutNames = document.querySelectorAll('.greyed-out');
+                    greyedOutNames.forEach(name => {
+                        greyedOutNamesSet.add(name.textContent);
+                    });
 
-        fetch(selectedFile)
-            .then(response => response.json())
-            .then(data => {
-                // Filter greyed-out names
-                var greyedOutNamesSet = new Set();
-                var greyedOutNames = document.querySelectorAll('.greyed-out');
-                greyedOutNames.forEach(name => {
-                    greyedOutNamesSet.add(name.textContent);
+                    var filteredStudents = data.students.filter(student => !greyedOutNamesSet.has(student));
+
+                    // Calculate and create the required groups
+                    calculateGroups(filteredStudents);
+
+                    // Set the h2 text color to black
+                    var headers = document.querySelectorAll('.group h2');
+                    headers.forEach(header => {
+                        header.style.color = 'black';
+                    });
+
+                    // Run populateGroups 10 times a second with the filtered data
+                    intervalID = setInterval(() => populateGroups({ students: filteredStudents }), 200);
+                })
+                .catch(error => {
+                    console.error('An error occurred while fetching the JSON file:', error);
                 });
-
-                var filteredStudents = data.students.filter(student => !greyedOutNamesSet.has(student));
-
-                // Calculate and create the required groups
-                calculateGroups(filteredStudents);
-
-                // Set the h2 text color to black
-                var headers = document.querySelectorAll('.group h2');
-                headers.forEach(header => {
-                    header.style.color = 'black';
-                });
-
-                // Run populateGroups 10 times a second with the filtered data
-                intervalID = setInterval(() => populateGroups({ students: filteredStudents }), 200);
-            })
-            .catch(error => {
-                console.error('An error occurred while fetching the JSON file:', error);
-            });
         }
 
         // Function to stop populating groups
